@@ -82,6 +82,13 @@ private:
     }
 
 public:
+    Entry* getEntry(int index) const {
+    if (index >= 0 && index < entries.size()) {
+        return entries[index];
+    }
+    return nullptr;  // Return nullptr if index is out of bounds
+}
+
     Diary(string fileName) : fileName(fileName) {
         loadEntries();
     }
@@ -102,15 +109,15 @@ public:
         cout << "Entry deleted successfully." << endl;
     }
 
-    void editEntry(int index, string newContent) {
-        if (index < 0 || index >= entries.size()) {
-            cout << "Invalid entry number!" << endl;
-            return;
-        }
-        entries[index]->setContent(newContent);
-        saveEntries();
-        cout << "Entry edited successfully." << endl;
+void editEntry(int index, string newContent) {
+    if (index < 0 || index >= entries.size()) {
+        cout << "Invalid entry number!" << endl;  // Keep this for invalid entry number
+        return;
     }
+    entries[index]->setContent(newContent);
+    saveEntries();  // Just save the changes without printing anything
+}
+
 
     void displayAllEntries() const {
         if(entries.empty()) {
@@ -208,19 +215,41 @@ public:
         waitForMainMenu();
     }
 
-    void editEntry() {
-        system("CLS");
-        int categoryIndex = selectCategory();
-        int entryNumber;
+void editEntry() {
+    system("CLS");
+    int categoryIndex = selectCategory();
+    int entryNumber;
+
+    cout << "Enter the entry number to edit: ";
+    cin >> entryNumber;
+    cin.ignore();  // Ignore leftover newline character
+
+    // Retrieve the entry
+    Entry* entry = diaries[categoryIndex]->getEntry(entryNumber - 1);  // Adjust for 0-based index
+
+    if (entry) {  // If entry is valid
+        cout << "Current entry:" << endl;
+        entry->displayEntry();
+
+        // Prompt for new content
         string newContent;
-        cout << "Enter the entry number to edit: ";
-        cin >> entryNumber;
-        cin.ignore();  // Ignore leftover newline character
-        cout << "Enter the new content: ";
+        cout << "\nEnter the new content below the current entry:" << endl;
         getline(cin, newContent);
-        diaries[categoryIndex]->editEntry(entryNumber - 1, newContent);  // Adjusting for 0-based index
-        waitForMainMenu();
+
+        // Update the entry with new content
+        diaries[categoryIndex]->editEntry(entryNumber - 1, newContent);
+
+        // Ensure the success message is only printed once
+        cout << "Entry edited successfully." << endl;
+    } else {
+        cout << "Invalid entry number!" << endl;
     }
+
+    waitForMainMenu();
+}
+
+
+
 
     void viewEntries() {
         system("CLS");
@@ -290,7 +319,7 @@ public:
 };
 
 int main() {
-    string userName = "USER1";
+    string userName = "SEEK";
     User user(userName);
     user.showMenu();
 
