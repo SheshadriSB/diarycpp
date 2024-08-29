@@ -16,10 +16,13 @@ public:
         this->content = content;
         time_t now = time(0);
         date = ctime(&now);
+        date.erase(date.find('\n'));  // Remove the newline character
     }
 
+    Entry(string content, string date) : content(content), date(date) {}
+
     virtual void displayEntry() const {
-        cout << "Date: " << date;
+        cout << "Date: " << date << endl;
         cout << "Content: " << content << endl;
     }
 
@@ -42,6 +45,7 @@ public:
 class TextEntry : public Entry {
 public:
     TextEntry(string content) : Entry(content) {}
+    TextEntry(string content, string date) : Entry(content, date) {}
 
     void displayEntry() const override {
         Entry::displayEntry();
@@ -59,8 +63,9 @@ private:
         if (!file.is_open()) return;
 
         string content;
-        while (getline(file, content)) {
-            entries.push_back(new TextEntry(content));
+        string date;
+        while (getline(file, date) && getline(file, content)) {
+            entries.push_back(new TextEntry(content, date));
         }
         file.close();
     }
@@ -70,6 +75,7 @@ private:
         if (!file.is_open()) return;
 
         for (const auto& entry : entries) {
+            file << entry->getDate() << endl;
             file << entry->getContent() << endl;
         }
         file.close();
@@ -119,26 +125,22 @@ public:
         }
     }
 
-   void searchEntriesByDate(string searchDate) const {
-    bool found = false;
-    for (const auto& entry : entries) {
-        string entryDate = entry->getDate();
+    void searchEntriesByDate(string searchDate) const {
+        bool found = false;
+        for (const auto& entry : entries) {
+            string entryDate = entry->getDate();
+            string entryDayMonthYear = entryDate.substr(8, 2) + " " + entryDate.substr(4, 3) + " " + entryDate.substr(20, 4);
 
-        // Extract only the day, month, and year from the date string
-        string entryDayMonthYear = entryDate.substr(8, 2) + " " + entryDate.substr(4, 3) + " " + entryDate.substr(20, 4);
-
-        // Compare the formatted date with the user input
-        if (entryDayMonthYear == searchDate) {
-            entry->displayEntry();
-            found = true;
-            cout << "----------------------------" << endl;
+            if (entryDayMonthYear == searchDate) {
+                entry->displayEntry();
+                found = true;
+                cout << "----------------------------" << endl;
+            }
+        }
+        if (!found) {
+            cout << "No entries found for the date: " << searchDate << endl;
         }
     }
-    if (!found) {
-        cout << "No entries found for the date: " << searchDate << endl;
-    }
-}
-
 
     ~Diary() {
         for (auto entry : entries) {
@@ -146,6 +148,7 @@ public:
         }
     }
 };
+
 
 // User Class for managing user interaction
 class User {
